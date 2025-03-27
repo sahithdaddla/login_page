@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('https://png.pngtree.com/thumb_back/fw800/background/20210902/pngtree-intelligent-artificial-intelligence-blue-technology-background-image_782883.jpg');
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+
+         .signin-container{
+            padding:0rem 2rem 2rem;
+            max-width: 400px;
+            width: 100%;
+            background-color: white;
+            margin-left: 30%;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+         }
+
+        .signin-container h2 {
+            margin-bottom: 1rem;
+            color: #333;
+            text-align: center;
+            color: blue;
+            font-size: 30px;
+        }
+
+        .signin-container label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .signin-container label i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .signin-container input {
+            width: 95%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .signin-container input:focus {
+            outline: none;
+        }
+
+        .signin-container button {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(to right, black, blue);
+            color: white;
+            font-size: 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .signin-container button:hover {
+            background-color: #ff6f61;
+        }
+
+        .signin-container a {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            color: #0b0b0b;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .signin-container a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .punch-time {
+            color: green;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+        <body>
+            <div class="signin-container">
+                <h2>Login In</h2>
+                <form id="signin-form">
+                    <label for="username"><i class="fas fa-user"></i> Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
+        
+                    <label for="password"><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+        
+                    <button type="submit">Sign In</button>
+                </form>
+        
+                <i class="fas fa-fingerprint" 
+                   id="fingerprint-icon" 
+                   style="font-size: 50px; margin-left: 63%; margin-top: 20px; transform: translateX(-50%); cursor: pointer; display: none;">
+                </i>
+        
+                <p class="error-message" id="error-message"></p>
+                <p class="punch-time" id="punch-time"></p>
+                
+                <button id="next-button" style="display: none; width: 100%; padding: 0.75rem; background: linear-gradient(to right, green, teal); color: white; font-size: 1rem; border: none; border-radius: 4px; cursor: pointer; margin-top: 1rem;">Next</button>
+                
+                <a href="./FingerSign_Uppage.html">New User create an account? <span style="color: blue;">Sign Up</span></a>
+                <a href="Adminforgotpassword.html">Forgot password  ? <span style="color: blue;">Rest password</span></a>
+            </div>
+            <script>
+const errorMessage = document.getElementById("error-message");
+const fingerprintIcon = document.getElementById("fingerprint-icon");
+const nextButton = document.getElementById("next-button");
+
+const googleMapsApiKey = 'YOUR_GOOGLE_MAPS_API_KEY'; 
+
+fingerprintIcon.style.display = "none";
+nextButton.style.display = "none";
+
+function fetchPlaceName(latitude, longitude) {
+    const apiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+
+    return fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.display_name) {
+                return `You are in: ${data.display_name}`;
+            } else {
+                return "Unable to determine location.";
+            }
+        })
+        .catch(error => {
+            return "Failed to fetch location. " + error.message;
+        });
+}
+
+function showLocation() {
+    return new Promise((resolve, reject) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    resolve(fetchPlaceName(latitude, longitude));
+                },
+                error => {
+                    reject('Unable to fetch location. Please allow location access.');
+                }
+            );
+        } else {
+            reject('Geolocation is not supported by this browser.');
+        }
+    });
+}
+
+document.getElementById("signin-form").addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    const storedUsername = localStorage.getItem("name");
+    const storedPassword = localStorage.getItem("password");
+
+    if (username === storedUsername && password === storedPassword) {
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("currentUser", username);
+
+        fingerprintIcon.style.display = "block";
+
+        errorMessage.textContent = "";
+
+        showLocation().then(locationMessage => {
+            alert(`Sign In successful! \n${locationMessage}`);
+        }).catch(error => {
+            alert(`Sign In successful! \n${error}`);
+        });
+
+    } else {
+        errorMessage.textContent = "Invalid username or password. Please try again.";
+        localStorage.setItem("isAuthenticated", "false");
+    }
+});
+
+fingerprintIcon.addEventListener("click", () => {
+    const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+
+    if (isAuthenticated) {
+        const currentDateTime = new Date();
+
+        const punchInHours = currentDateTime.getHours().toString().padStart(2, '0');
+        const punchInMinutes = currentDateTime.getMinutes().toString().padStart(2, '0');
+        const punchInTime = `${punchInHours}:${punchInMinutes}`;
+
+        localStorage.setItem("punchInTime", punchInTime);
+
+        alert(`Punch-In Time: ${punchInTime}`);
+        window.location.href = "Dashboard.html"; 
+
+    } else {
+        alert("Please log in first to punch in!");
+    }
+});
+
+            </script>
+                
+</body>
+</html>
